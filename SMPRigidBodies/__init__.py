@@ -19,8 +19,8 @@
 import bpy
 from bpy.props import (StringProperty, CollectionProperty, IntProperty, EnumProperty)
 
-from SMPRigidBodies.SMP_UI import SMP_OT_actions, SMP_OT_defaultTags, SMP_OT_clearList, SMP_OT_removeDuplicates, \
-    SMP_OT_tagCollection, SMP_UL_items, SMP_PT_objectList, SMP_objectCollection
+from SMPRigidBodies.SMP_UI import SMP_OT_actions_ncwt, SMP_OT_actions_cwt, SMP_OT_defaultTags_ncwt, \
+    SMP_OT_defaultTags_cwt,SMP_OT_tagCollection, SMP_UL_items, SMP_PT_CollisionPropertiesPanel,  SMP_objectCollection
 from SMPRigidBodies.SMPExport import SMPExport
 
 bl_info = {
@@ -36,13 +36,13 @@ bl_info = {
 # -------------------------------------------------------------------
 
 classes = (
-    SMP_OT_actions,
-    SMP_OT_defaultTags,
-    SMP_OT_clearList,
-    SMP_OT_removeDuplicates,
+    SMP_OT_actions_ncwt,
+    SMP_OT_defaultTags_ncwt,
+    SMP_OT_actions_cwt,
+    SMP_OT_defaultTags_cwt,
     SMP_OT_tagCollection,
     SMP_UL_items,
-    SMP_PT_objectList,
+    SMP_PT_CollisionPropertiesPanel,
     SMP_objectCollection,
     SMPExport,
 )
@@ -57,12 +57,19 @@ def register():
         register_class(cls)
 
     # SMP properties
-    bpy.types.Object.smp_props = CollectionProperty(type=SMP_objectCollection)
-    bpy.types.Object.smp_props_index = IntProperty()
+    bpy.types.Object.no_collide_with_tags = CollectionProperty(type=SMP_objectCollection)
+    bpy.types.Object.no_collide_with_tags_index = IntProperty()
+    bpy.types.Object.collide_with_tags = CollectionProperty(type=SMP_objectCollection)
+    bpy.types.Object.collide_with_tags_index = IntProperty()
     bpy.types.Object.smp_tag = StringProperty(default="collision_mesh")
     bpy.types.Object.smp_col_type = EnumProperty(items=(
         ('vertex', "per-vertex-shape", ""),
         ('triangle', "per-triangle-shape", "")))
+    bpy.types.Object.smp_col_privacy = EnumProperty(items=(
+        ('public', "public", ""),
+        ('private', "private", ""),
+        ('internal', "internal", ""),
+        ('external', "external", "")))
     # Insert into export menu
     bpy.types.TOPBAR_MT_file_export.append(SMP_menu_export)
 
@@ -71,8 +78,10 @@ def unregister():
     for cls in reversed(classes):
         unregister_class(cls)
 
-    del bpy.types.Object.smp_props
-    del bpy.types.Object.smp_props_index
+    del bpy.types.Object.no_collide_with_tags
+    del bpy.types.Object.no_collide_with_tags_index
+    del bpy.types.Object.collide_with_tags
+    del bpy.types.Object.collide_with_tags_index
     del bpy.types.Object.smp_tag
     del bpy.types.Object.smp_col_type
     # Remove from export menu

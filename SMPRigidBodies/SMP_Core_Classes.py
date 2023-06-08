@@ -23,7 +23,7 @@ from SMPRigidBodies.SMPMath import rotate_vector_blender_to_opengl
 class SMPCollisionShape():
     collision_mesh_type = "vertex"
     collision_mesh_privacy = "private"
-    no_collide_with_tags = ["hair", "head", "hands", "body", "collision_mesh"]
+    no_collide_with_tags = []
     collide_with_tags = []
     name = "UNNAMED"
     tag = "collision_mesh"
@@ -35,10 +35,14 @@ class SMPCollisionShape():
         self.name = obj.name
         self.margin = rb_obj.collision_margin
 
-        if obj.smp_props:
-            self.no_collide_with_tags = [x.name for x in obj.smp_props]
+        if obj.no_collide_with_tags:
+            self.no_collide_with_tags = [x.name for x in obj.no_collide_with_tags]
+        if obj.collide_with_tags:
+            self.collide_with_tags = [x.name for x in obj.collide_with_tags]
         if obj.smp_col_type:
             self.collision_mesh_type = obj.smp_col_type
+        if obj.smp_col_privacy:
+            self.collision_mesh_privacy = obj.smp_col_privacy
         if obj.smp_tag:
             self.tag = obj.smp_tag
 
@@ -53,7 +57,7 @@ class SMPCollisionShape():
                 output_string += f"""        <no-collide-with-tag>{no_collide_tag}</no-collide-with-tag>\n"""
         if self.collide_with_tags:
             for collide_tag in self.collide_with_tags:
-                output_string += f"""        <collide-with-tag>{no_collide_tag}</collide-with-tag>\n"""
+                output_string += f"""        <can-collide-with-tag>{collide_tag}</can-collide-with-tag>\n"""
         output_string += f"""    </per-{self.collision_mesh_type}-shape>\n\n"""
 
         return output_string

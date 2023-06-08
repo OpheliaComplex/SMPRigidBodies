@@ -28,10 +28,10 @@ from bpy.types import (Operator,
                        UIList)
 
 
-class SMP_OT_actions(Operator):
+class SMP_OT_actions_ncwt(Operator):
     """Move items up and down, add and remove"""
-    bl_idname = "smp_props.list_action"
-    bl_label = "List Actions"
+    bl_idname = "no_collide_with_tags.list_action"
+    bl_label = "No Collide With Tags list actions"
     bl_description = "Move items up and down, add and remove"
     bl_options = {'REGISTER'}
 
@@ -44,117 +44,123 @@ class SMP_OT_actions(Operator):
 
     def invoke(self, context, event):
         obj = context.active_object
-        idx = obj.smp_props_index
+        idx = obj.no_collide_with_tags_index
 
         try:
-            item = obj.smp_props[idx]
+            item = obj.no_collide_with_tags[idx]
         except IndexError:
             pass
         else:
-            if self.action == 'DOWN' and idx < len(obj.smp_props) - 1:
-                item_next = obj.smp_props[idx + 1].name
-                obj.smp_props.move(idx, idx + 1)
-                obj.smp_props_index += 1
-                info = 'Item "%s" moved to position %d' % (item.name, obj.smp_props_index + 1)
+            if self.action == 'DOWN' and idx < len(obj.no_collide_with_tags) - 1:
+                item_next = obj.no_collide_with_tags[idx + 1].name
+                obj.no_collide_with_tags.move(idx, idx + 1)
+                obj.no_collide_with_tags_index += 1
+                info = 'Item "%s" moved to position %d' % (item.name, obj.no_collide_with_tags_index + 1)
                 self.report({'INFO'}, info)
 
             elif self.action == 'UP' and idx >= 1:
-                item_prev = obj.smp_props[idx - 1].name
-                obj.smp_props.move(idx, idx - 1)
-                obj.smp_props_index -= 1
-                info = 'Item "%s" moved to position %d' % (item.name, obj.smp_props_index + 1)
+                item_prev = obj.no_collide_with_tags[idx - 1].name
+                obj.no_collide_with_tags.move(idx, idx - 1)
+                obj.no_collide_with_tags_index -= 1
+                info = 'Item "%s" moved to position %d' % (item.name, obj.no_collide_with_tags_index + 1)
                 self.report({'INFO'}, info)
 
             elif self.action == 'REMOVE':
-                info = 'Item "%s" removed from list' % (obj.smp_props[idx].name)
-                obj.smp_props_index -= 1
-                obj.smp_props.remove(idx)
+                info = 'Item "%s" removed from list' % (obj.no_collide_with_tags[idx].name)
+                obj.no_collide_with_tags_index -= 1
+                obj.no_collide_with_tags.remove(idx)
                 self.report({'INFO'}, info)
 
         if self.action == 'ADD':
-            item = obj.smp_props.add()
+            item = obj.no_collide_with_tags.add()
             item.name = "tag"
-            item.obj_id = len(obj.smp_props)
-            obj.smp_props_index = len(obj.smp_props) - 1
+            item.obj_id = len(obj.no_collide_with_tags)
+            obj.no_collide_with_tags_index = len(obj.no_collide_with_tags) - 1
 
         return {"FINISHED"}
 
 
-class SMP_OT_defaultTags(Operator):
-    """Fill with default tags"""
-    bl_idname = "smp_props.default_tags"
+class SMP_OT_defaultTags_ncwt(Operator):
+    """Fill with default no collide with tags"""
+    bl_idname = "no_collide_with_tags.default_tags"
     bl_label = "Fill default tags"
     bl_description = "Fill with default collision tags"
     bl_options = {'INTERNAL'}
 
     def invoke(self, context, event):
         for tag in ["body", "hair", "hands", "head"]:
-            item = context.active_object.smp_props.add()
+            item = context.active_object.no_collide_with_tags.add()
             item.name = tag
-            item.obj_id = len(context.active_object.smp_props)
-            context.active_object.smp_props_index = len(context.active_object.smp_props) - 1
+            item.obj_id = len(context.active_object.no_collide_with_tags)
+            context.active_object.no_collide_with_tags_index = len(context.active_object.no_collide_with_tags) - 1
         return {'FINISHED'}
 
+class SMP_OT_actions_cwt(Operator):
+    """Move items up and down, add and remove"""
+    bl_idname = "collide_with_tags.list_action"
+    bl_label = "Collide With Tags list actions"
+    bl_description = "Move items up and down, add and remove"
+    bl_options = {'REGISTER'}
 
-class SMP_OT_clearList(Operator):
-    """Clear all items of the list"""
-    bl_idname = "smp_props.clear_list"
-    bl_label = "Clear List"
-    bl_description = "Clear all items of the list"
-    bl_options = {'INTERNAL'}
-
-    @classmethod
-    def poll(cls, context):
-        return bool(context.active_object.smp_props)
+    action: bpy.props.EnumProperty(
+        items=(
+            ('UP', "Up", ""),
+            ('DOWN', "Down", ""),
+            ('REMOVE', "Remove", ""),
+            ('ADD', "Add", "")))
 
     def invoke(self, context, event):
-        return context.window_manager.invoke_confirm(self, event)
-
-    def execute(self, context):
-        if bool(context.active_object.smp_props):
-            context.active_object.smp_props.clear()
-            self.report({'INFO'}, "All items removed")
-        else:
-            self.report({'INFO'}, "Nothing to remove")
-        return {'FINISHED'}
-
-
-class SMP_OT_removeDuplicates(Operator):
-    """Remove all duplicates"""
-    bl_idname = "smp_props.remove_duplicates"
-    bl_label = "Remove Duplicates"
-    bl_description = "Remove all duplicates"
-    bl_options = {'INTERNAL'}
-
-    def find_duplicates(self, context):
-        """find all duplicates by name"""
-        name_lookup = {}
-        for c, i in enumerate(context.active_object.smp_props):
-            name_lookup.setdefault(i.name, []).append(c)
-        duplicates = set()
-        for name, indices in name_lookup.items():
-            for i in indices[1:]:
-                duplicates.add(i)
-        return sorted(list(duplicates))
-
-    @classmethod
-    def poll(cls, context):
-        return bool(context.active_object.smp_props)
-
-    def execute(self, context):
         obj = context.active_object
-        removed_items = []
-        # Reverse the list before removing the items
-        for i in self.find_duplicates(context)[::-1]:
-            obj.smp_props.remove(i)
-            removed_items.append(i)
-        if removed_items:
-            obj.smp_props_index = len(obj.smp_props) - 1
-        return {'FINISHED'}
+        idx = obj.collide_with_tags_index
+
+        try:
+            item = obj.collide_with_tags[idx]
+        except IndexError:
+            pass
+        else:
+            if self.action == 'DOWN' and idx < len(obj.collide_with_tags) - 1:
+                item_next = obj.collide_with_tags[idx + 1].name
+                obj.collide_with_tags.move(idx, idx + 1)
+                obj.collide_with_tags_index += 1
+                info = 'Item "%s" moved to position %d' % (item.name, obj.collide_with_tags_index + 1)
+                self.report({'INFO'}, info)
+
+            elif self.action == 'UP' and idx >= 1:
+                item_prev = obj.collide_with_tags[idx - 1].name
+                obj.collide_with_tags.move(idx, idx - 1)
+                obj.collide_with_tags_index -= 1
+                info = 'Item "%s" moved to position %d' % (item.name, obj.collide_with_tags_index + 1)
+                self.report({'INFO'}, info)
+
+            elif self.action == 'REMOVE':
+                info = 'Item "%s" removed from list' % (obj.collide_with_tags[idx].name)
+                obj.collide_with_tags_index -= 1
+                obj.collide_with_tags.remove(idx)
+                self.report({'INFO'}, info)
+
+        if self.action == 'ADD':
+            item = obj.collide_with_tags.add()
+            item.name = "tag"
+            item.obj_id = len(obj.collide_with_tags)
+            obj.collide_with_tags_index = len(obj.collide_with_tags) - 1
+
+        return {"FINISHED"}
+
+
+class SMP_OT_defaultTags_cwt(Operator):
+    """Fill with default no collide with tags"""
+    bl_idname = "collide_with_tags.default_tags"
+    bl_label = "Fill default tags"
+    bl_description = "Fill with default collision tags"
+    bl_options = {'INTERNAL'}
 
     def invoke(self, context, event):
-        return context.window_manager.invoke_confirm(self, event)
-
+        for tag in ["body", "hair", "hands", "head"]:
+            item = context.active_object.collide_with_tags.add()
+            item.name = tag
+            item.obj_id = len(context.active_object.collide_with_tags)
+            context.active_object.collide_with_tags_index = len(context.active_object.collide_with_tags) - 1
+        return {'FINISHED'}
 
 class SMP_UL_items(UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
@@ -165,11 +171,12 @@ class SMP_UL_items(UIList):
         pass
 
 
-class SMP_PT_objectList(Panel):
-    """Custom panel in the rigid body physics properties area"""
+class SMP_PT_CollisionPropertiesPanel(Panel):
+    """Custom panel in the rigid body physics properties area
+    Containing a list of tags to not collide with"""
 
-    bl_idname = "SMPRIGIDBODIES_PT_SMPRigidBodies"
-    bl_label = "SMPRigidBodies"
+    bl_idname = "SMPRIGIDBODIES_PT_CollisionPropertiesPanel"
+    bl_label = "SMPRigidBodies_CollisionPropertiesPanel"
 
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
@@ -186,30 +193,56 @@ class SMP_PT_objectList(Panel):
 
         type_row = layout.row()
         type_row.prop(obj, "smp_col_type", text="collision type")
+        row = layout.row()
+        row.prop(obj, "smp_col_privacy", text="shared")
         tag_row = layout.row()
         tag_row.prop(obj, "smp_tag", text="tag")
+
+        # ************* NO COLLIDE WITH TAGS *************
 
         desc_row = layout.row()
         desc_row.label(text="no-collide-with-tags")
 
         rows = 2
         row = layout.row()
-        row.template_list("SMP_UL_items", "", obj, "smp_props", obj, "smp_props_index", rows=rows)
+        row.template_list("SMP_UL_items", "", obj, "no_collide_with_tags", obj, "no_collide_with_tags_index", rows=rows)
 
         col = row.column(align=True)
-        col.operator("smp_props.list_action", icon='ADD', text="").action = 'ADD'
-        col.operator("smp_props.list_action", icon='REMOVE', text="").action = 'REMOVE'
+        col.operator("no_collide_with_tags.list_action", icon='ADD', text="").action = 'ADD'
+        col.operator("no_collide_with_tags.list_action", icon='REMOVE', text="").action = 'REMOVE'
         col.separator()
-        col.operator("smp_props.list_action", icon='TRIA_UP', text="").action = 'UP'
-        col.operator("smp_props.list_action", icon='TRIA_DOWN', text="").action = 'DOWN'
+        col.operator("no_collide_with_tags.list_action", icon='TRIA_UP', text="").action = 'UP'
+        col.operator("no_collide_with_tags.list_action", icon='TRIA_DOWN', text="").action = 'DOWN'
 
         row = layout.row()
         col = row.column(align=True)
         row = col.row(align=True)
-        row.operator("smp_props.default_tags", icon="ADD")
-        row.operator("smp_props.clear_list", icon="X")
-        row.operator("smp_props.remove_duplicates", icon="GHOST_ENABLED")
+        row.operator("no_collide_with_tags.default_tags", icon="ADD")
+        row.operator("no_collide_with_tags.clear_list", icon="X")
+        row.operator("no_collide_with_tags.remove_duplicates", icon="GHOST_ENABLED")
 
+        # ************ COLLIDE WITH TAGS ************
+
+        desc_row = layout.row()
+        desc_row.label(text="no-collide-with-tags")
+
+        rows = 2
+        row = layout.row()
+        row.template_list("SMP_UL_items", "", obj, "collide_with_tags", obj, "collide_with_tags_index", rows=rows)
+
+        col = row.column(align=True)
+        col.operator("collide_with_tags.list_action", icon='ADD', text="").action = 'ADD'
+        col.operator("collide_with_tags.list_action", icon='REMOVE', text="").action = 'REMOVE'
+        col.separator()
+        col.operator("collide_with_tags.list_action", icon='TRIA_UP', text="").action = 'UP'
+        col.operator("collide_with_tags.list_action", icon='TRIA_DOWN', text="").action = 'DOWN'
+
+        row = layout.row()
+        col = row.column(align=True)
+        row = col.row(align=True)
+        row.operator("collide_with_tags.default_tags", icon="ADD")
+        row.operator("collide_with_tags.clear_list", icon="X")
+        row.operator("collide_with_tags.remove_duplicates", icon="GHOST_ENABLED")
 
 # -------------------------------------------------------------------
 #   Collection
