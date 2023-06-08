@@ -84,6 +84,7 @@ def unregister():
     del bpy.types.Object.collide_with_tags_index
     del bpy.types.Object.smp_tag
     del bpy.types.Object.smp_col_type
+    del bpy.types.Object.smp_col_privacy
     # Remove from export menu
     bpy.types.TOPBAR_MT_file_export.remove(SMP_menu_export)
 
