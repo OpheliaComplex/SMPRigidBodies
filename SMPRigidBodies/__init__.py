@@ -20,7 +20,8 @@ import bpy
 from bpy.props import (StringProperty, CollectionProperty, IntProperty, EnumProperty)
 
 from SMPRigidBodies.SMP_UI import SMP_OT_actions_ncwt, SMP_OT_actions_cwt, SMP_OT_defaultTags_ncwt, \
-    SMP_OT_defaultTags_cwt,SMP_OT_tagCollection, SMP_UL_items, SMP_PT_CollisionPropertiesPanel,  SMP_objectCollection
+    SMP_OT_defaultTags_cwt,SMP_OT_tagCollection, SMP_UL_items, SMP_PT_CollisionPropertiesPanel,  SMP_objectCollection,\
+    SMP_Props_that_dont_exist_in_blender, RBBExtraProps
 from SMPRigidBodies.SMPExport import SMPExport
 
 bl_info = {
@@ -45,6 +46,8 @@ classes = (
     SMP_PT_CollisionPropertiesPanel,
     SMP_objectCollection,
     SMPExport,
+    SMP_Props_that_dont_exist_in_blender,
+    RBBExtraProps,
 )
 
 
@@ -52,11 +55,17 @@ def SMP_menu_export(self, context):
     self.layout.operator(SMPExport.bl_idname, text="Skinned mesh physics (SMP) .xml")
 
 def register():
+
+    if not check_for_Rigid_Body_bones():
+        # We check for the Rigid Body Bones addon, and if it's not enabled, we raise an error.
+        # This lets us register some properties into rigid body bones menus safely.
+        raise EnvironmentError("Please install and enable the Rigid Body Bones addon before enabling SMPRigidBodies.")
+
     from bpy.utils import register_class
     for cls in classes:
         register_class(cls)
 
-    # SMP properties
+    # SMP properties belonging to SMPRigidBodies
     bpy.types.Object.no_collide_with_tags = CollectionProperty(type=SMP_objectCollection)
     bpy.types.Object.no_collide_with_tags_index = IntProperty()
     bpy.types.Object.collide_with_tags = CollectionProperty(type=SMP_objectCollection)
@@ -84,9 +93,16 @@ def unregister():
     del bpy.types.Object.collide_with_tags_index
     del bpy.types.Object.smp_tag
     del bpy.types.Object.smp_col_type
+    del bpy.types.Object.smp_col_privacy
     # Remove from export menu
     bpy.types.TOPBAR_MT_file_export.remove(SMP_menu_export)
 
+def check_for_Rigid_Body_bones():
+    # Check that Pauan's Rigid Body Bones addon is installed and enabled
+    if "Rigid Body Bones" in bpy.context.preferences.addons.keys():
+        if hasattr(bpy.types, "DATA_PT_rigid_body_bones_armature_settings"):
+            return True
+    return False
 
 if __name__ == "__main__":
     register()

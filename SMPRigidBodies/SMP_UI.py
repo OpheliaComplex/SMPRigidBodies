@@ -218,8 +218,6 @@ class SMP_PT_CollisionPropertiesPanel(Panel):
         col = row.column(align=True)
         row = col.row(align=True)
         row.operator("no_collide_with_tags.default_tags", icon="ADD")
-        row.operator("no_collide_with_tags.clear_list", icon="X")
-        row.operator("no_collide_with_tags.remove_duplicates", icon="GHOST_ENABLED")
 
         # ************ COLLIDE WITH TAGS ************
 
@@ -241,8 +239,91 @@ class SMP_PT_CollisionPropertiesPanel(Panel):
         col = row.column(align=True)
         row = col.row(align=True)
         row.operator("collide_with_tags.default_tags", icon="ADD")
-        row.operator("collide_with_tags.clear_list", icon="X")
-        row.operator("collide_with_tags.remove_duplicates", icon="GHOST_ENABLED")
+# -------------------------------------------------------------------
+#   Injection in Rigid Body Bones panel
+# -------------------------------------------------------------------
+def rigid_body_menu(self, context):
+    self.layout.menu("VIEW3D_MT_pose_rigid_body_extras")
+
+class SMP_Props_that_dont_exist_in_blender(bpy.types.PropertyGroup):
+
+    inertia: bpy.props.FloatProperty(
+        name="inertia",
+        description="The (x,y,z) inertia of the bone, final inertia is computed as 1/<this inertia value>. Using the "
+                    "default value is strongly recommended, default: 1.0.",
+        default=1.0,
+        min=0.0,
+        max=100.0,
+        precision=1,
+        step=0.1,
+        unit='NONE',
+    )
+
+    gravity_factor: bpy.props.FloatProperty(
+        name="gravity factor",
+        description="Will be applied to the gravity of the bone, default: 1.0.",
+        default=1.0,
+        min=0.0,
+        max=10.0,
+        precision=2,
+        step=0.1,
+        unit='NONE',
+    )
+
+    rolling_friction: bpy.props.FloatProperty(
+        name="rolling friction",
+        description="Unknown, default: 0.0.",
+        default=0.0,
+        min=0.0,
+        max=1.0,
+        precision=2,
+        step=0.1,
+        unit='NONE',
+    )
+
+    margin_multiplier: bpy.props.FloatProperty(
+        name="margin multiplier",
+        description="Unknown, default: 1.0.",
+        default=1.0,
+        min=0.0,
+        max=1.0,
+        precision=2,
+        step=0.1,
+        unit='NONE',
+    )
+
+    @classmethod
+    def register(cls):
+        bpy.types.Bone.rigid_body_bones_extra_props = bpy.props.PointerProperty(type=cls)
+
+    @classmethod
+    def unregister(cls):
+        del bpy.types.Bone.rigid_body_bones_extra_props
+
+class RBBExtraProps(bpy.types.Panel):
+    bl_idname = "DATA_PT_rigid_body_bones_extra_properties"
+    bl_label = "EXTRA SMP Rigid Bodies properties"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = "Rigid Body Bones"
+    bl_parent_id = "DATA_PT_rigid_body_bones_bone"
+    bl_options = set()
+    bl_order = 6
+
+    def draw(self, context):
+        data = context.active_object.data.bones.active.rigid_body_bones_extra_props
+        layout = self.layout
+        row = layout.row()
+        # add some text describing these properties
+        row.label(text="These properties have no effect in Blender, but will be exported and included in the SMP .xml file")
+        row = layout.row()
+        row.prop(data, "inertia")
+        row = layout.row()
+        row.prop(data, "gravity_factor")
+        row = layout.row()
+        row.prop(data, "rolling_friction")
+        row = layout.row()
+        row.prop(data, "margin_multiplier")
 
 # -------------------------------------------------------------------
 #   Collection

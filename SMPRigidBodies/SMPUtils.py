@@ -48,7 +48,7 @@ def parse_scene(scene):
                     if " [Actives]" in armature_collection_child.name:
                         for obj in armature_collection_child.objects:
                             bone_name = obj.name.replace(" [Active]" ,"")
-                            kinematics.append(SMPKinematicBone(obj))
+                            kinematics.append(SMPKinematicBone(obj, arma_name))
 
                     if " [Joints]" in armature_collection_child.name:
                         for obj in armature_collection_child.objects:
