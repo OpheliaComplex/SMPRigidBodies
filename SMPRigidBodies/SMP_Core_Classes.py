@@ -23,22 +23,28 @@ from SMPRigidBodies.SMPMath import rotate_vector_blender_to_opengl
 class SMPCollisionShape():
     collision_mesh_type = "vertex"
     collision_mesh_privacy = "private"
-    no_collide_with_tags = ["hair", "head", "hands", "body", "collision_mesh"]
+    no_collide_with_tags = []
     collide_with_tags = []
     name = "UNNAMED"
     tag = "collision_mesh"
     margin = 0.1
     penetration = 0.1
 
+    #TODO: add weight-threshold ?
+
     def __init__(self, obj):
         rb_obj = obj.rigid_body
         self.name = obj.name
         self.margin = rb_obj.collision_margin
 
-        if obj.smp_props:
-            self.no_collide_with_tags = [x.name for x in obj.smp_props]
+        if obj.no_collide_with_tags:
+            self.no_collide_with_tags = [x.name for x in obj.no_collide_with_tags]
+        if obj.collide_with_tags:
+            self.collide_with_tags = [x.name for x in obj.collide_with_tags]
         if obj.smp_col_type:
             self.collision_mesh_type = obj.smp_col_type
+        if obj.smp_col_privacy:
+            self.collision_mesh_privacy = obj.smp_col_privacy
         if obj.smp_tag:
             self.tag = obj.smp_tag
 
@@ -53,7 +59,7 @@ class SMPCollisionShape():
                 output_string += f"""        <no-collide-with-tag>{no_collide_tag}</no-collide-with-tag>\n"""
         if self.collide_with_tags:
             for collide_tag in self.collide_with_tags:
-                output_string += f"""        <collide-with-tag>{no_collide_tag}</collide-with-tag>\n"""
+                output_string += f"""        <can-collide-with-tag>{collide_tag}</can-collide-with-tag>\n"""
         output_string += f"""    </per-{self.collision_mesh_type}-shape>\n\n"""
 
         return output_string
@@ -101,21 +107,28 @@ class SMPKinematicBone():
     """
     Class for holding a kinematic bones and it's SMP definitions
     """
-    rollingFriction = 0.0
-    gravityFactor = 1.0
+
+    # Inertia should always be 1.0 for kinematic bones and can't be changed in blender.
+    # However, many users change it on the SMP xml side
     inertia_x = inertia_y = inertia_z = 1.0
+
+    # SMP properties with corresponding blender properties
     bone_name = "Unset bone"
     mass = 1.0
     linearDamping = 0.2
     angularDamping = 0.1
     friction = 0.0
-    rollingFriction = 0.0
-    margin = 1.0
+    restitution = 0.0
 
-    def __init__(self, bone):
-        rb_obj = bone.rigid_body
+    # These do not have a proper corresponding blender property
+    rollingFriction = 0.0
+    gravityFactor = 1.0
+    margin_multiplier = 1.0
+
+    def __init__(self, obj, armature_name):
+        rb_obj = obj.rigid_body
         assert rb_obj.type == "ACTIVE"
-        self.bone_name = bone.name.replace(" [Active]", "")
+        self.bone_name = obj.name.replace(" [Active]", "")
         self.mass = rb_obj.mass
 
         self.linearDamping = rb_obj.linear_damping
@@ -123,6 +136,15 @@ class SMPKinematicBone():
 
         self.friction = rb_obj.friction
         self.restitution = rb_obj.restitution
+
+        # Extra properties in the rigid body bones panel extra props
+        # First get the bone based on the bone_name and the armature
+        bone = bpy.data.objects[armature_name].data.bones.get(self.bone_name)
+        bone_data = bone.rigid_body_bones_extra_props
+        self.gravityFactor = bone_data.gravity_factor
+        self.margin_multiplier = bone_data.margin_multiplier
+        self.rollingFriction = bone_data.rolling_friction
+        self.inertia_x = self.inertia_y = self.inertia_z = bone_data.inertia
 
     def generate_string(self):
         output_string = f"""    <bone name="{self.bone_name}">
@@ -137,7 +159,7 @@ class SMPKinematicBone():
         <friction>{self.friction}</friction> 
         <rollingFriction>{self.rollingFriction}</rollingFriction>
         <restitution>{self.restitution}</restitution>
-        <margin-multiplier>{self.margin}</margin-multiplier>
+        <margin-multiplier>{self.margin_multiplier}</margin-multiplier>
         <gravity-factor>{self.gravityFactor}</gravity-factor>
     </bone>\n\n"""
         return output_string
