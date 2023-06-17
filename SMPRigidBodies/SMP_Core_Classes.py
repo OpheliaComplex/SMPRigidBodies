@@ -197,8 +197,8 @@ class SMPGenericConstraint():
     # This class takes a rigid body constraint and sets all variables, with defaults settings for disabled translation/rotation limits
 
     def __init__(self, b_rb_constraint):
-        self.bodyA = b_rb_constraint.object1.name.replace(" [Passive]", "").replace(" [Active]", "")
-        self.bodyB = b_rb_constraint.object2.name.replace(" [Passive]", "").replace(" [Active]", "")
+        self.bodyA = b_rb_constraint.object1.name.replace(" [Passive]", "").replace(" [Active]", "").replace(" [Blank]", "")
+        self.bodyB = b_rb_constraint.object2.name.replace(" [Passive]", "").replace(" [Active]", "").replace(" [Blank]", "")
         self.useLinearReferenceFrameA = False
 
         self.set_lin_limits(b_rb_constraint)

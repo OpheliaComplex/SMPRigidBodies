@@ -54,9 +54,6 @@ def parse_scene(scene):
                         for obj in armature_collection_child.objects:
                             if obj.rigid_body_constraint is not None:
                                 constr = obj.rigid_body_constraint
-                                constraint_name = obj.name.replace(" [Head]" ,"")
-                                constr_trgt1 = constr.object1.name.replace(" [Passive]" ,"").replace(" [Active]" ,"")
-                                constr_trgt2 = constr.object2.name.replace(" [Passive]" ,"").replace(" [Active]" ,"")
 
                                 hkx_constr = SMPGenericConstraint(constr)
                                 hkx_constraints_list.append(hkx_constr)
