@@ -87,7 +87,8 @@ class SMPStaticBones():
     bone_list = []
 
     def __init__(self):
-        pass
+        # When initialized the bone_list should be empty
+        self.bone_list = []
 
     def push(self, bone):
         # Should probably raise on encountering '[Active]'
