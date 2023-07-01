@@ -20,6 +20,11 @@ import bpy
 from mathutils import Vector
 from SMPRigidBodies.SMPMath import rotate_vector_blender_to_opengl
 
+# Custom SMP error
+class SMPError(Exception):
+    def __init__(self, message):
+        self.message = message
+
 class SMPCollisionShape():
     collision_mesh_type = "vertex"
     collision_mesh_privacy = "private"
@@ -96,7 +101,7 @@ class SMPStaticBones():
 
     def generate_string(self):
         if not self.bone_list:
-            raise "No static bones"
+            raise SMPError("No static bones")
         output_string = self.header
         for bone in self.bone_list:
             output_string += f"""    <bone name="{bone}"/>\n"""
