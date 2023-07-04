@@ -38,6 +38,9 @@ def parse_scene(scene):
         # Find the RigidBodyBones collection
         if collection.name == "RigidBodyBones":
             for armature_collections in collection.children:
+                # Rigid body bones names the armature collection after its data property name, ie
+                # armature.data.name + " [Container]"
+                # This is different to the armature OBJECT name
                 arma_name = armature_collections.name.replace(" [Container]" ,"")
                 for armature_collection_child in armature_collections.children:
                     if " [Passives]" in armature_collection_child.name:

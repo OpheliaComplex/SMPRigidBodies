@@ -145,7 +145,12 @@ class SMPKinematicBone():
 
         # Extra properties in the rigid body bones panel extra props
         # First get the bone based on the bone_name and the armature
-        bone = bpy.data.objects[armature_name].data.bones.get(self.bone_name)
+        #************
+        # Rigid body bones names the armature collection after its data property name, ie
+        # armature.data.name + " [Container]"
+        # This is different to the armature OBJECT name
+        #************
+        bone = bpy.data.armatures[armature_name].bones.get(self.bone_name)
         bone_data = bone.rigid_body_bones_extra_props
         self.gravityFactor = bone_data.gravity_factor
         self.margin_multiplier = bone_data.margin_multiplier
